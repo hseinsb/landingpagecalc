@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuctionCalc Private Walkthrough</title>
+    
+    <!-- Google Analytics (GA4) -->
+    <!-- Replace G-XXXXXXXXXX with your actual GA4 Measurement ID -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Syne', 'system-ui', 'sans-serif'],
+                        sans: ['Outfit', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        midnight: '#030712',
+                        charcoal: '#0f172a',
+                        slate: '#1e293b',
+                        accent: '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Syne:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+                linear-gradient(180deg, #030712 0%, #0f172a 50%, #030712 100%);
+        }
+        
+        .video-glow {
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.08),
+                0 4px 60px -10px rgba(59, 130, 246, 0.12),
+                0 20px 80px -20px rgba(0, 0, 0, 0.9);
+        }
+        
+        .subtle-border {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fade-in 0.8s ease-out forwards;
+        }
+        
+        .animate-fade-in-delay {
+            animation: fade-in 0.8s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+        
+        .animate-fade-in-delay-2 {
+            animation: fade-in 0.8s ease-out 0.4s forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans text-white antialiased">
+    
+    <main class="min-h-screen flex flex-col items-center justify-center px-4 py-12 md:py-16">
+        
+        <!-- Content Container -->
+        <div class="w-full max-w-4xl mx-auto">
+            
+            <!-- Header -->
+            <header class="text-center mb-10 md:mb-14 animate-fade-in">
+                <h1 class="font-display text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4">
+                    AuctionCalc Private Walkthrough
+                </h1>
+                <p class="text-base md:text-lg text-white/50 max-w-xl mx-auto leading-relaxed font-light">
+                    Watch this fully. If it fits, the next steps are in the video.
+                </p>
+            </header>
+            
+            <!-- Video Container -->
+            <div class="animate-fade-in-delay">
+                <div class="relative rounded-2xl overflow-hidden video-glow subtle-border bg-slate">
+                    <!-- 
+                        Place your video file in the same folder as index.html
+                        Then update the src below with your filename (e.g., "walkthrough.mp4")
+                    -->
+                    <video 
+                        class="w-full h-auto"
+                        controls
+                        playsinline
+                        preload="metadata"
+                    >
+                        <source src="walkthrough.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+            
+            <!-- Footer Note -->
+            <footer class="text-center mt-10 md:mt-14 animate-fade-in-delay-2">
+                <div class="inline-flex items-center gap-2 text-sm text-white/30">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    <span>Private link — do not share</span>
+                </div>
+            </footer>
+            
+        </div>
+        
+    </main>
+    
+</body>
+</html>
