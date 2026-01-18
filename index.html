@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuctionCalc Private Walkthrough</title>
+    <title>AuctionCalc — Private Bid Engine</title>
     
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-T4BRG5HBCR"></script>
@@ -12,6 +12,21 @@
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'G-T4BRG5HBCR');
+        
+        // Custom event tracking function
+        function trackEvent(eventName, params = {}) {
+            gtag('event', eventName, params);
+            console.log('GA4 Event:', eventName, params);
+        }
+    </script>
+    
+    <!-- Microsoft Clarity -->
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/YOUR_CLARITY_ID";
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script");
     </script>
     
     <!-- Tailwind CSS -->
@@ -38,115 +53,335 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Syne:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body {
-            background: 
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
-                linear-gradient(180deg, #030712 0%, #0f172a 50%, #030712 100%);
+        html {
+            scroll-behavior: smooth;
         }
         
-        .video-glow {
+        body {
+            background: linear-gradient(180deg, #030712 0%, #0f172a 100%);
+        }
+        
+        .hero-gradient {
+            background: 
+                radial-gradient(ellipse 60% 40% at 50% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 60%),
+                linear-gradient(180deg, #030712 0%, #0f172a 100%);
+        }
+        
+        .card-glow {
             box-shadow: 
                 0 0 0 1px rgba(255, 255, 255, 0.08),
-                0 4px 60px -10px rgba(59, 130, 246, 0.12),
-                0 20px 80px -20px rgba(0, 0, 0, 0.9);
+                0 4px 60px -10px rgba(59, 130, 246, 0.15),
+                0 20px 80px -20px rgba(0, 0, 0, 0.8);
         }
         
-        .subtle-border {
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 4px 20px -4px rgba(59, 130, 246, 0.5);
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 6px 30px -4px rgba(59, 130, 246, 0.6);
+            transform: translateY(-1px);
+        }
+        
+        .sticky-cta {
+            backdrop-filter: blur(20px);
+            background: rgba(3, 7, 18, 0.9);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .form-input {
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
         }
         
-        @keyframes fade-in {
-            from { opacity: 0; transform: translateY(20px); }
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(59, 130, 246, 0.5);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .animate-fade-in {
-            animation: fade-in 0.8s ease-out forwards;
+        .animate-fade-up {
+            animation: fade-up 0.8s ease-out forwards;
         }
         
-        .animate-fade-in-delay {
-            animation: fade-in 0.8s ease-out 0.2s forwards;
-            opacity: 0;
-        }
-        
-        .animate-fade-in-delay-2 {
-            animation: fade-in 0.8s ease-out 0.4s forwards;
-            opacity: 0;
-        }
+        .animate-fade-up-delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .animate-fade-up-delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .animate-fade-up-delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .animate-fade-up-delay-4 { animation-delay: 0.4s; opacity: 0; }
     </style>
 </head>
 <body class="min-h-screen font-sans text-white antialiased">
     
-    <main class="min-h-screen flex flex-col items-center px-4 py-12 md:py-20">
+    <!-- Sticky CTA Header (appears on scroll) -->
+    <header id="sticky-header" class="fixed top-0 left-0 right-0 z-50 sticky-cta transform -translate-y-full transition-transform duration-300">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <span class="font-display font-bold text-lg">AuctionCalc</span>
+            <button 
+                onclick="scrollToApplication()"
+                class="btn-primary px-5 py-2 rounded-lg font-semibold text-sm transition-all duration-200"
+            >
+                Apply for Access
+            </button>
+        </div>
+    </header>
+    
+    <main>
         
-        <!-- Content Container -->
-        <div class="w-full max-w-4xl mx-auto">
-            
-            <!-- Header -->
-            <header class="text-center mb-10 md:mb-14 animate-fade-in">
-                <h1 class="font-display text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4">
-                    AuctionCalc Private Walkthrough
+        <!-- HERO SECTION -->
+        <section class="hero-gradient min-h-screen flex items-center pt-8 pb-20 px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                
+                <!-- Badge -->
+                <div class="animate-fade-up inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white/70 mb-8">
+                    <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                    Limited Access — By Application Only
+                </div>
+                
+                <!-- H1 -->
+                <h1 class="animate-fade-up animate-fade-up-delay-1 font-display text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6">
+                    AuctionCalc
+                    <span class="block text-white/60 text-3xl md:text-5xl lg:text-6xl font-bold mt-2">Private Bid Engine</span>
                 </h1>
-                <p class="text-base md:text-lg text-white/50 max-w-xl mx-auto leading-relaxed font-light">
-                    Watch this fully. If it fits, the next steps are in the video.
+                
+                <!-- Subheadline -->
+                <p class="animate-fade-up animate-fade-up-delay-2 text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
+                    Make confident auction bids backed by real market data — and stop leaving money on the table.
                 </p>
-            </header>
-            
-            <!-- Video Container -->
-            <div class="animate-fade-in-delay">
-                <div class="relative rounded-2xl overflow-hidden video-glow subtle-border bg-slate">
+                
+                <!-- Value Props -->
+                <div class="animate-fade-up animate-fade-up-delay-3 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-12 text-white/70">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Real-time market pricing</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Profit margin calculator</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Bid with confidence</span>
+                    </div>
+                </div>
+                
+                <!-- CTAs -->
+                <div class="animate-fade-up animate-fade-up-delay-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button 
+                        id="hero-cta"
+                        onclick="handleApplyClick()"
+                        class="btn-primary px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center gap-2"
+                    >
+                        Apply for Access
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                        </svg>
+                    </button>
+                    <a 
+                        href="#demo-video" 
+                        class="text-white/60 hover:text-white transition-colors flex items-center gap-2 py-4"
+                    >
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                        </svg>
+                        Watch 60-sec demo
+                    </a>
+                </div>
+                
+            </div>
+        </section>
+        
+        <!-- DEMO VIDEO SECTION -->
+        <section id="demo-video" class="py-20 px-4">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-10">
+                    <h2 class="font-display text-2xl md:text-3xl font-bold text-white mb-3">
+                        See It In Action
+                    </h2>
+                    <p class="text-white/50">60-second overview of how AuctionCalc works</p>
+                </div>
+                
+                <div class="rounded-2xl overflow-hidden card-glow bg-slate">
                     <video 
+                        id="demo-video-player"
                         class="w-full h-auto"
                         controls
                         playsinline
                         preload="metadata"
+                        poster=""
                     >
                         <source src="walkthrough.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 </div>
             </div>
-            
-            <!-- Private Access Section -->
-            <section class="mt-16 md:mt-20">
+        </section>
+        
+        <!-- APPLICATION SECTION -->
+        <section id="application" class="py-20 px-4">
+            <div class="max-w-2xl mx-auto">
                 
-                <!-- Section Header -->
-                <div class="text-center mb-10">
-                    <h2 class="font-display text-2xl md:text-4xl font-bold text-white mb-4">
-                        Private Access Walkthrough
-                    </h2>
-                    <p class="text-base md:text-lg text-white/60 max-w-xl mx-auto leading-relaxed">
-                        You've now seen how the system works and who it's for.<br>
-                        If this feels aligned, you can request a private call below.
-                    </p>
-                    <p class="text-sm text-white/40 max-w-md mx-auto mt-4">
-                        These calls are limited and reserved manually.<br>
-                        Please only book if you're serious about improving your buying decisions.
-                    </p>
+                <!-- Application Form -->
+                <div id="application-form-container" class="rounded-2xl p-8 md:p-12 card-glow bg-charcoal/80">
+                    <div class="text-center mb-10">
+                        <h2 class="font-display text-2xl md:text-3xl font-bold text-white mb-3">
+                            Apply for Access
+                        </h2>
+                        <p class="text-white/50">
+                            We review every application. Qualified buyers get access within 24 hours.
+                        </p>
+                    </div>
+                    
+                    <form id="application-form" class="space-y-5">
+                        
+                        <!-- Row 1: Name & Email -->
+                        <div class="grid md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm text-white/60 mb-2">Full Name *</label>
+                                <input 
+                                    type="text" 
+                                    name="name" 
+                                    required
+                                    class="form-input w-full px-4 py-3 rounded-xl text-white"
+                                    placeholder="John Smith"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm text-white/60 mb-2">Email *</label>
+                                <input 
+                                    type="email" 
+                                    name="email" 
+                                    required
+                                    class="form-input w-full px-4 py-3 rounded-xl text-white"
+                                    placeholder="john@example.com"
+                                >
+                            </div>
+                        </div>
+                        
+                        <!-- Row 2: Phone -->
+                        <div>
+                            <label class="block text-sm text-white/60 mb-2">Phone Number *</label>
+                            <input 
+                                type="tel" 
+                                name="phone" 
+                                required
+                                class="form-input w-full px-4 py-3 rounded-xl text-white"
+                                placeholder="(555) 123-4567"
+                            >
+                        </div>
+                        
+                        <!-- Row 3: Volume & Budget -->
+                        <div class="grid md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm text-white/60 mb-2">Vehicles Purchased / Month *</label>
+                                <select 
+                                    name="volume" 
+                                    required
+                                    class="form-input w-full px-4 py-3 rounded-xl text-white appearance-none cursor-pointer"
+                                >
+                                    <option value="" disabled selected>Select volume</option>
+                                    <option value="1-5">1–5 vehicles</option>
+                                    <option value="6-15">6–15 vehicles</option>
+                                    <option value="16-30">16–30 vehicles</option>
+                                    <option value="30+">30+ vehicles</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-white/60 mb-2">Monthly Budget Range *</label>
+                                <select 
+                                    name="budget" 
+                                    required
+                                    class="form-input w-full px-4 py-3 rounded-xl text-white appearance-none cursor-pointer"
+                                >
+                                    <option value="" disabled selected>Select budget</option>
+                                    <option value="under-50k">Under $50K</option>
+                                    <option value="50k-100k">$50K – $100K</option>
+                                    <option value="100k-250k">$100K – $250K</option>
+                                    <option value="250k+">$250K+</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Row 4: Timeframe -->
+                        <div>
+                            <label class="block text-sm text-white/60 mb-2">When are you looking to start? *</label>
+                            <select 
+                                name="timeframe" 
+                                required
+                                class="form-input w-full px-4 py-3 rounded-xl text-white appearance-none cursor-pointer"
+                            >
+                                <option value="" disabled selected>Select timeframe</option>
+                                <option value="immediately">Immediately</option>
+                                <option value="1-2-weeks">1–2 weeks</option>
+                                <option value="1-month">Within a month</option>
+                                <option value="exploring">Just exploring</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Row 5: Current Process -->
+                        <div>
+                            <label class="block text-sm text-white/60 mb-2">How do you currently decide on bids? *</label>
+                            <textarea 
+                                name="current_process" 
+                                required
+                                rows="3"
+                                class="form-input w-full px-4 py-3 rounded-xl text-white resize-none"
+                                placeholder="Describe your current process in 1-2 sentences..."
+                            ></textarea>
+                        </div>
+                        
+                        <button 
+                            type="submit"
+                            class="btn-primary w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 mt-6"
+                        >
+                            Submit Application
+                        </button>
+                        
+                        <p class="text-center text-white/30 text-sm mt-4">
+                            Your information is secure and never shared.
+                        </p>
+                    </form>
                 </div>
                 
-                <!-- CTA Button (Initial State) -->
-                <div id="cta-container" class="text-center">
-                    <button 
-                        id="request-call-btn"
-                        class="inline-flex items-center gap-2 px-8 py-4 bg-white text-midnight font-semibold rounded-xl hover:bg-white/90 transition-all duration-200 text-lg"
-                    >
-                        Request a Private Call
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                        </svg>
-                    </button>
-                </div>
-                
-                <!-- Booking Calendar (Hidden Until Button Clicked) -->
-                <div id="booking-container" class="hidden">
-                    <div class="rounded-2xl overflow-visible video-glow subtle-border bg-white">
+                <!-- Scheduler (Hidden until application submitted) -->
+                <div id="scheduler-container" class="hidden">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 mb-4">
+                            <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <h2 class="font-display text-2xl md:text-3xl font-bold text-white mb-3">
+                            Application Received
+                        </h2>
+                        <p class="text-white/50 max-w-md mx-auto">
+                            You're pre-qualified. Book your AuctionCalc Access Call to complete your application.
+                        </p>
+                    </div>
+                    
+                    <div class="rounded-2xl overflow-visible card-glow bg-white">
                         <!-- Cal inline embed code begins -->
-                        <!-- Height: 1100px mobile (stacked layout), 700px desktop (side-by-side) -->
-                        <div class="cal-embed-container" id="my-cal-inline-30-minute-call-inquiring-about-business"></div>
+                        <div class="cal-embed-container" id="my-cal-inline-auctioncalc-access-call"></div>
                         <style>
                             .cal-embed-container {
                                 width: 100%;
@@ -161,50 +396,169 @@
                         </style>
                         <script type="text/javascript">
                             (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let cal = C.Cal; let ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { const api = function () { p(api, arguments); }; const namespace = ar[1]; api.q = api.q || []; if(typeof namespace === "string"){cal.ns[namespace] = cal.ns[namespace] || api;p(cal.ns[namespace], ar);p(cal, ["initNamespace", namespace]);} else p(cal, ar); return;} p(cal, ar); }; })(window, "https://app.cal.com/embed/embed.js", "init");
-                            Cal("init", "30-minute-call-inquiring-about-business", {origin:"https://app.cal.com"});
+                            Cal("init", "auctioncalc-access-call", {origin:"https://app.cal.com"});
 
-                            Cal.ns["30-minute-call-inquiring-about-business"]("inline", {
-                                elementOrSelector:"#my-cal-inline-30-minute-call-inquiring-about-business",
+                            Cal.ns["auctioncalc-access-call"]("inline", {
+                                elementOrSelector:"#my-cal-inline-auctioncalc-access-call",
                                 config: {"layout":"month_view"},
                                 calLink: "husseinsbeiti/30-minute-call-inquiring-about-business",
                             });
 
-                            Cal.ns["30-minute-call-inquiring-about-business"]("ui", {"hideEventTypeDetails":false,"layout":"month_view"});
+                            Cal.ns["auctioncalc-access-call"]("ui", {"hideEventTypeDetails":false,"layout":"month_view"});
+                            
+                            // Listen for booking success
+                            Cal.ns["auctioncalc-access-call"]("on", {
+                                action: "bookingSuccessful",
+                                callback: (e) => {
+                                    trackEvent('call_booked', { 
+                                        event_category: 'conversion',
+                                        event_label: 'auctioncalc_access_call'
+                                    });
+                                    // Redirect to confirmed page
+                                    window.location.href = '/confirmed.html';
+                                }
+                            });
                         </script>
                         <!-- Cal inline embed code ends -->
                     </div>
                 </div>
                 
-            </section>
-            
-            <!-- Show Calendar on Button Click -->
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const ctaContainer = document.getElementById('cta-container');
-                    const requestBtn = document.getElementById('request-call-btn');
-                    const bookingContainer = document.getElementById('booking-container');
-                    
-                    requestBtn.addEventListener('click', function() {
-                        ctaContainer.classList.add('hidden');
-                        bookingContainer.classList.remove('hidden');
-                        bookingContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    });
-                });
-            </script>
-            
-            <!-- Footer Note -->
-            <footer class="text-center mt-10 md:mt-14">
-                <div class="inline-flex items-center gap-2 text-sm text-white/30">
+            </div>
+        </section>
+        
+        <!-- FULL WALKTHROUGH (Optional) -->
+        <section id="full-walkthrough" class="py-20 px-4 border-t border-white/5">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-10">
+                    <h2 class="font-display text-2xl md:text-3xl font-bold text-white mb-3">
+                        Full Walkthrough
+                    </h2>
+                    <p class="text-white/50">Complete deep-dive into the AuctionCalc system</p>
+                </div>
+                
+                <div class="rounded-2xl overflow-hidden card-glow bg-slate">
+                    <video 
+                        id="full-walkthrough-player"
+                        class="w-full h-auto"
+                        controls
+                        playsinline
+                        preload="metadata"
+                    >
+                        <source src="walkthrough.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        </section>
+        
+        <!-- FOOTER -->
+        <footer class="py-10 px-4 border-t border-white/5">
+            <div class="max-w-4xl mx-auto text-center">
+                <div class="flex items-center justify-center gap-2 text-sm text-white/30">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
-                    <span>Private link — do not share</span>
+                    <span>Private access — invitation only</span>
                 </div>
-            </footer>
-            
-        </div>
+                <p class="text-white/20 text-sm mt-4">© 2026 AuctionCalc. All rights reserved.</p>
+            </div>
+        </footer>
         
     </main>
+    
+    <!-- SCRIPTS -->
+    <script>
+        // Sticky header on scroll
+        const stickyHeader = document.getElementById('sticky-header');
+        const heroSection = document.querySelector('.hero-gradient');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > heroSection.offsetHeight - 100) {
+                stickyHeader.classList.remove('-translate-y-full');
+            } else {
+                stickyHeader.classList.add('-translate-y-full');
+            }
+        });
+        
+        // Scroll to application
+        function scrollToApplication() {
+            trackEvent('cta_apply_click', { location: 'sticky_header' });
+            document.getElementById('application').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Handle Apply Click from Hero
+        function handleApplyClick() {
+            trackEvent('cta_apply_click', { location: 'hero' });
+            document.getElementById('application').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Application form submission
+        const applicationForm = document.getElementById('application-form');
+        const formContainer = document.getElementById('application-form-container');
+        const schedulerContainer = document.getElementById('scheduler-container');
+        
+        applicationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect form data
+            const formData = new FormData(applicationForm);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Track application submit
+            trackEvent('application_submit', {
+                volume: data.volume,
+                budget: data.budget,
+                timeframe: data.timeframe
+            });
+            
+            // Hide form, show scheduler
+            formContainer.classList.add('hidden');
+            schedulerContainer.classList.remove('hidden');
+            
+            // Track scheduler view
+            trackEvent('scheduler_view');
+            
+            // Scroll to scheduler
+            schedulerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        
+        // Video tracking
+        function setupVideoTracking(videoElement, videoName) {
+            let hasStarted = false;
+            let has50 = false;
+            let has90 = false;
+            
+            videoElement.addEventListener('play', function() {
+                if (!hasStarted) {
+                    trackEvent('video_start', { video_name: videoName });
+                    hasStarted = true;
+                }
+            });
+            
+            videoElement.addEventListener('timeupdate', function() {
+                const percent = (videoElement.currentTime / videoElement.duration) * 100;
+                
+                if (percent >= 50 && !has50) {
+                    trackEvent('video_50', { video_name: videoName });
+                    has50 = true;
+                }
+                
+                if (percent >= 90 && !has90) {
+                    trackEvent('video_90', { video_name: videoName });
+                    has90 = true;
+                }
+            });
+        }
+        
+        // Initialize video tracking
+        document.addEventListener('DOMContentLoaded', function() {
+            const demoVideo = document.getElementById('demo-video-player');
+            const fullVideo = document.getElementById('full-walkthrough-player');
+            
+            if (demoVideo) setupVideoTracking(demoVideo, 'demo_60sec');
+            if (fullVideo) setupVideoTracking(fullVideo, 'full_walkthrough');
+        });
+    </script>
     
 </body>
 </html>
